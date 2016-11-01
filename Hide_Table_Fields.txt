@@ -1,0 +1,37 @@
+# This script hides the fields in the table attributes, indicated by the user, for all layers of the data frame by mxd project
+# Use this script in Python Window in ArcGIS - ArcMap
+
+import arcpy
+
+mxd = arcpy.mapping.MapDocument("CURRENT")
+# Put in the list "desiredFields" the fields to hide
+desiredFields = ['OBJECTID', 'Shape', 'Shape.STArea()', 'Shape.STLength()']
+df = arcpy.mapping.ListDataFrames(mxd, "*")[0]
+
+# List all layers in Data Frame ans each filed in Atribute Table
+for lyr in reversed(arcpy.mapping.ListLayers(mxd, "", df)):
+	desc = arcpy.Describe(lyr)
+	fieldInfo = desc.fieldInfo
+	i = 0
+	
+	# Search fields and compare their name with "desiredFields"
+	for i in range(fieldInfo.count):
+		if fieldInfo.getfieldname(i) in desiredFields:
+			fieldInfo.setVisible(i, 'HIDDEN')
+			print 'Layer: ['+lyr.name+']'
+			print 'Field Name: ' + fieldInfo.getfieldname(i) + " \tVisibility:    " + fieldInfo.getVisible(i)				
+	
+	# Create new layers with "desiredFields" hidden, replace the original and save project (mxd)
+	arcpy.MakeFeatureLayer_management(lyr, lyr.name + '_1', '', '', fieldInfo)
+	refLyr = arcpy.mapping.Layer(lyr.name + '_1')
+	refLyr.showLabels = lyr.showLabels
+	refLyr.labelClasses = lyr.labelClasses
+	refLyr.name = lyr.name
+	lyr.name= refLyr.name
+	arcpy.mapping.UpdateLayer(df, refLyr, lyr, True)
+	arcpy.mapping.RemoveLayer(df, lyr)
+	arcpy.RefreshActiveView()
+	arcpy.RefreshTOC()
+	mxd.save()
+	print 'done.' 
+del mxd, refLyr, lyr, i
