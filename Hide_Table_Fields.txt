@@ -5,7 +5,7 @@ import arcpy
 
 mxd = arcpy.mapping.MapDocument("CURRENT")
 # Put in the list "desiredFields" the fields to hide
-desiredFields = ['OBJECTID', 'Shape', 'Shape.STArea()', 'Shape.STLength()']
+desiredFields = ['OBJECTID', 'Shape', 'Shape.Area()', 'Shape.Length()']
 df = arcpy.mapping.ListDataFrames(mxd, "*")[0]
 
 # List all layers in Data Frame ans each filed in Atribute Table
@@ -26,6 +26,8 @@ for lyr in reversed(arcpy.mapping.ListLayers(mxd, "", df)):
 	refLyr = arcpy.mapping.Layer(lyr.name + '_1')
 	refLyr.showLabels = lyr.showLabels
 	refLyr.labelClasses = lyr.labelClasses
+	refLyr.transparency = lyr.transparency
+	refLyr.definitionQuery = lyr.definitionQuery
 	refLyr.name = lyr.name
 	lyr.name= refLyr.name
 	arcpy.mapping.UpdateLayer(df, refLyr, lyr, True)
